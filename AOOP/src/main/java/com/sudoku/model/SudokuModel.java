@@ -1,140 +1,45 @@
-package com.sudoku.model;
+package sudoku.model;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Random;
-import java.util.Observable;
+import java.util.Set;
 
-public class SudokuModel extends Observable {
-    private Board currentBoard;
-    private Board initialBoard;
-    private List<int[][]> puzzleList;
-    private int lastMoveRow = -1;
-    private int lastMoveCol = -1;
-    private int lastMoveValue = 0;
-    private final Random random = new Random();
+public interface SudokuModel {
+    int SIZE = 9;
 
-    private boolean validationFeedbackEnabled = true;
-    private boolean hintEnabled = true;
-    private boolean randomPuzzleEnabled = true;
+    int getCellValue(int row, int col);
 
-    public SudokuModel(String puzzleFilePath) throws IOException {
-        this.puzzleList = PuzzleLoader.loadPuzzles(puzzleFilePath);
-        loadNewPuzzle();
-    }
+    boolean isCellFixed(int row, int col);
 
-    public boolean setCellValue(int row, int col, int value) {
-        if (validationFeedbackEnabled && !currentBoard.isValidMove(row, col, value)) {
-            return false;
-        }
-        Cell cell = currentBoard.getCell(row, col);
-        if (cell == null || !cell.isEditable()) {
-            return false;
-        }
-        this.lastMoveRow = row;
-        this.lastMoveCol = col;
-        this.lastMoveValue = cell.getValue();
-        boolean success = cell.setValue(value);
-        if (success) {
-            notifyModelChanged();
-        }
-        return success;
-    }
+    boolean isCellEditable(int row, int col);
 
-    public boolean clearCell(int row, int col) {
-        Cell cell = currentBoard.getCell(row, col);
-        if (cell == null || !cell.isEditable()) {
-            return false;
-        }
-        this.lastMoveRow = row;
-        this.lastMoveCol = col;
-        this.lastMoveValue = cell.getValue();
-        cell.clear();
-        notifyModelChanged();
-        return true;
-    }
+    boolean setCellValue(int row, int col, int value);
 
-    public void loadNewPuzzle() {
-        int[][] selectedPuzzle;
-        if (randomPuzzleEnabled) {
-            int randomIndex = random.nextInt(puzzleList.size());
-            selectedPuzzle = puzzleList.get(randomIndex);
-        } else {
-            selectedPuzzle = puzzleList.get(0);
-        }
-        this.initialBoard = new Board(selectedPuzzle);
-        this.currentBoard = initialBoard.deepCopy();
-        resetLastMove();
-        notifyModelChanged();
-    }
+    boolean clearCell(int row, int col);
 
-    public void resetPuzzle() {
-        this.currentBoard = initialBoard.deepCopy();
-        resetLastMove();
-        notifyModelChanged();
-    }
+    boolean undoLastAction();
 
-    public boolean isGameWon() {
-        return currentBoard.isBoardComplete() && currentBoard.isBoardValid();
-    }
+    boolean canUndo();
 
-    public boolean isBoardValid() {
-        return currentBoard.isBoardValid();
-    }
+    boolean revealHint();
 
-    public boolean isCellValid(int row, int col) {
-        return currentBoard.isCellValid(row, col);
-    }
+    void resetPuzzle();
 
-    public boolean isValidationFeedbackEnabled() {
-        return validationFeedbackEnabled;
-    }
+    void newGame();
 
-    public void setValidationFeedbackEnabled(boolean validationFeedbackEnabled) {
-        this.validationFeedbackEnabled = validationFeedbackEnabled;
-        notifyModelChanged();
-    }
+    boolean isComplete();
 
-    public boolean isHintEnabled() {
-        return hintEnabled;
-    }
+    Set<CellPosition> getInvalidCells();
 
-    public void setHintEnabled(boolean hintEnabled) {
-        this.hintEnabled = hintEnabled;
-    }
+    int[][] getBoardSnapshot();
 
-    public boolean isRandomPuzzleEnabled() {
-        return randomPuzzleEnabled;
-    }
+    boolean isValidationFeedbackEnabled();
 
-    public void setRandomPuzzleEnabled(boolean randomPuzzleEnabled) {
-        this.randomPuzzleEnabled = randomPuzzleEnabled;
-    }
+    void setValidationFeedbackEnabled(boolean enabled);
 
-    public Board getCurrentBoard() {
-        return currentBoard;
-    }
+    boolean isHintEnabled();
 
-    public Board getInitialBoard() {
-        return initialBoard;
-    }
+    void setHintEnabled(boolean enabled);
 
-    private void notifyModelChanged() {
-        setChanged();
-        notifyObservers();
-    }
+    boolean isRandomPuzzleSelectionEnabled();
 
-    private void resetLastMove() {
-        this.lastMoveRow = -1;
-        this.lastMoveCol = -1;
-        this.lastMoveValue = 0;
-    }
-
-    public boolean undoLastMove() {
-        return false;
-    }
-
-    public boolean giveHint() {
-        return false;
-    }
+    void setRandomPuzzleSelectionEnabled(boolean enabled);
 }
