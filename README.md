@@ -1,2 +1,0 @@
-# AOOP
-Aoop coursework
